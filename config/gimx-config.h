@@ -396,6 +396,7 @@ class configFrame: public wxFrame
         wxMenuItem* MenuItemDS2;
         wxMenuItem* MenuItemDS3;
         wxMenuItem* MenuItemDS4;
+        wxMenuItem* MenuItemSwitch;
         wxMenuItem* MenuItemDfPs2;
         wxMenuItem* MenuItemDfpPs2;
         wxMenuItem* MenuItemG27Ps3;
