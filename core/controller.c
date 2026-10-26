@@ -43,6 +43,11 @@ static const int baudrates[] = { 2000000, 1000000, DEFAULT_BAUDRATE }; //bps
  * The number of times the adapter is queried for its baudrate before assuming baudrate is not supported.
  */
 #define ADAPTER_BAUDRATE_RETRIES 3
+/*
+ * The number of times the adapter is queried for its type at a baudrate it should not be using.
+ * This only happens after it failed to answer at the default baudrate, so keep it low.
+ */
+#define ADAPTER_PROBE_RETRIES 2
 
 static s_adapter adapters[MAX_CONTROLLERS] = {};
 
@@ -735,7 +740,7 @@ static int adapter_write_timeout(int adapter, s_packet* packet)
 /*
  * This function should only be used in the initialization stages, i.e. before the mainloop.
  */
-static int adapter_send_short_command(int adapter, unsigned char type)
+static int adapter_send_short_command(int adapter, unsigned char type, int permissive)
 {
   s_packet packet =
   {
@@ -749,17 +754,23 @@ static int adapter_send_short_command(int adapter, unsigned char type)
   int ret = adapter_write_timeout(adapter, &packet);
   if(ret < 0 || (size_t)ret < sizeof(packet.header))
   {
-    gerror("failed to send data to the GIMX adapter\n");
+    if (!permissive)
+    {
+      gerror("failed to send data to the GIMX adapter\n");
+    }
     return -1;
   }
 
-  ret = adapter_read_reply(adapter, &packet, 0);
+  ret = adapter_read_reply(adapter, &packet, permissive);
 
   if(ret == 0)
   {
     if(packet.header.length != BYTE_LEN_1_BYTE)
     {
-      gerror("bad response from the GIMX adapter (invalid length)\n");
+      if (!permissive)
+      {
+        gerror("bad response from the GIMX adapter (invalid length)\n");
+      }
       return -1;
     }
     return packet.value[0];
@@ -919,6 +930,104 @@ static void adapter_close(int i)
   }
 }
 
+/*
+ * Ask the adapter for its type on the port as it is currently open.
+ *
+ * Errors are silenced: a silent adapter is not yet a failure here, since the caller
+ * may still have other baudrates to try.
+ */
+static int adapter_query_type(int adapter, int retries)
+{
+  int rtype = -1;
+  int i;
+  for (i = 0; i < retries && rtype == -1 && get_done() == 0; ++i)
+  {
+    rtype = adapter_send_short_command(adapter, BYTE_TYPE, 1);
+  }
+  return rtype;
+}
+
+/*
+ * Find the adapter, whatever baudrate it is currently listening on.
+ *
+ * The adapter keeps the baudrate it was last set to until it loses power, and it draws
+ * that power from the target console rather than from the host. A run that raised the
+ * baudrate and then died before negotiating it back down therefore leaves the adapter
+ * deaf to the next run, which only ever opens at DEFAULT_BAUDRATE, and it stays that way
+ * for as long as the console keeps the port powered. Sweep the other rates gimx uses
+ * before concluding the adapter is absent, and put any straggler back on the default.
+ *
+ * Expects the port to be open at DEFAULT_BAUDRATE. Returns the controller type, or -1.
+ */
+static int adapter_probe_type(int adapter)
+{
+  int rtype = adapter_query_type(adapter, ADAPTER_INIT_RETRIES);
+
+  if (rtype >= 0 || get_done() != 0)
+  {
+    return rtype;
+  }
+
+  if (adapters[adapter].atype != E_ADAPTER_TYPE_DIY_USB)
+  {
+    return -1; // no serial link, so no baudrate to get wrong
+  }
+
+  unsigned int b;
+  for (b = 0; b < sizeof(baudrates) / sizeof(*baudrates) && get_done() == 0; ++b)
+  {
+    if (baudrates[b] == DEFAULT_BAUDRATE)
+    {
+      continue; // already tried, that is how we got here
+    }
+
+    if (adapter_open(adapter, baudrates[b]) != E_GIMX_STATUS_SUCCESS)
+    {
+      continue;
+    }
+
+    if (adapter_query_type(adapter, ADAPTER_PROBE_RETRIES) < 0)
+    {
+      continue;
+    }
+
+    gwarn(_("GIMX adapter answered at %d bps instead of %d bps (a previous run left it there).\n"),
+            baudrates[b], DEFAULT_BAUDRATE);
+
+    if (adapter_set_baudrate(adapter, DEFAULT_BAUDRATE) < 0)
+    {
+      return -1;
+    }
+
+    //Leave time for the adapter to apply the new baudrate.
+    usleep(ADAPTER_RESET_TIME);
+
+    if (adapter_open(adapter, DEFAULT_BAUDRATE) != E_GIMX_STATUS_SUCCESS)
+    {
+      return -1;
+    }
+
+    rtype = adapter_query_type(adapter, ADAPTER_INIT_RETRIES);
+    if (rtype < 0)
+    {
+      gerror(_("failed to restore the default baudrate. Unplug the adapter from the console to reset it.\n"));
+    }
+    else
+    {
+      ginfo(_("Restored baudrate: %d bps.\n"), DEFAULT_BAUDRATE);
+    }
+    return rtype;
+  }
+
+  /*
+   * Nothing answered. Leave the port on the default baudrate: adapter_clean sends a
+   * reset on whatever port is open, and it should not go out at a probe baudrate.
+   */
+  adapter_open(adapter, DEFAULT_BAUDRATE);
+
+  return -1;
+}
+
 e_gimx_status adapter_detect()
 {
   e_gimx_status ret = E_GIMX_STATUS_SUCCESS;
@@ -952,12 +1061,7 @@ e_gimx_status adapter_detect()
       ret = adapter_open(i, DEFAULT_BAUDRATE);
       if(ret == E_GIMX_STATUS_SUCCESS)
       {
-        int rtype = -1;
-        int j;
-        for (j = 0; j < ADAPTER_INIT_RETRIES && rtype == -1 && get_done() == 0; ++j)
-        {
-          rtype = adapter_send_short_command(i, BYTE_TYPE);
-        }
+        int rtype = adapter_probe_type(i);
 
         if(rtype >= 0 && rtype < C_TYPE_NONE)
         {
@@ -1075,6 +1179,22 @@ e_gimx_status adapter_detect()
         }
         else
         {
+          if (get_done() == 0)
+          {
+            if (adapter->atype == E_ADAPTER_TYPE_DIY_USB)
+            {
+              gerror(_("no answer from the GIMX adapter on %s:\n"
+                      " . the target console must be powered on: the adapter is powered by it, not by this host\n"
+                      " . make sure the right port is selected\n"
+                      " . if you built the adapter yourself, check the wiring (swapping RX and TX is a common mistake)\n"
+                      "   and make sure it runs the right firmware\n"),
+                      adapter->serial.portname);
+            }
+            else
+            {
+              gerror(_("no answer from the remote GIMX adapter.\n"));
+            }
+          }
           ret = E_GIMX_STATUS_ADAPTER_NOT_DETECTED;
         }
       }
@@ -1226,7 +1346,7 @@ int adapter_start()
 
       if (!adapter->proxy.is_proxy)
       {
-        if(adapter_send_short_command(i, BYTE_START) < 0)
+        if(adapter_send_short_command(i, BYTE_START, 0) < 0)
         {
           gerror(_("failed to start the GIMX adapter.\n"));
           ret = -1;
