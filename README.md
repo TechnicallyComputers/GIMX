@@ -11,6 +11,12 @@ This is a fork of GIMX for Linux systems where evdev support has resulted in joy
 
 If you find you're using GIMX by matlo on a certain non-ubuntu distro and it just refuses to do something like, accept proper analog joystick or throttle inputs, it might be a critical kernel level difference in expected behaviour and your best bet is to either swithc to the OS distro he built the software on, or try out evdev.  
 
+### Nintendo Switch Support
+
+Based on https://github.com/hisptoot/GIMX/tree/master
+
+I have pulled diffs from Hisptoot to generate their firmware for the ATmega32U4 Arduino microcontroller in the GIMX cable, and after finding some issues with stability, I have adapted the behaviors after several rounds of diagnostics and testing, to produce a more stable Nintendo Switch based firmware, to allow spoofing a Nintendo Switch Pro controller.  This does not have motion control support at this time, but it works well with basic controls so far.  Part of my work with this project is to expand the support of GIMX with more stable console support for consoles I own and can test on.
+
 **WARNING** this version is not officially supported by matlo, and while you can download all the configs from their repository, they will NOT work!  This is because evdev ID numbers are different and names of devices might be fetched differently.  You won't be able to match any old configs.  But you CAN still download them and use them as references for remapping, as many of them have nice advanced features and offer structure to work from.
 
 Please report any bugs with identifying your devices, and send your device and device ID found with `evdev-test` or `cat /proc/bus/input/devices`
