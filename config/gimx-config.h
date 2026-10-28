@@ -327,6 +327,8 @@ class configFrame: public wxFrame
         static const long ID_MENUITEM25;
         static const long ID_MENUITEM27;
         static const long idMenuAbout;
+        static const long ID_MENUITEMG920XONE;
+        static const long ID_MENUITEMSWITCH;
         static const long ID_STATUSBAR1;
         //*)
 
@@ -396,6 +398,7 @@ class configFrame: public wxFrame
         wxMenuItem* MenuItemDS2;
         wxMenuItem* MenuItemDS3;
         wxMenuItem* MenuItemDS4;
+        wxMenuItem* MenuItemSwitch;
         wxMenuItem* MenuItemDfPs2;
         wxMenuItem* MenuItemDfpPs2;
         wxMenuItem* MenuItemG27Ps3;
@@ -415,6 +418,7 @@ class configFrame: public wxFrame
         wxMenuItem* MenuItemSetMouseDPI;
         wxMenuItem* MenuItemT300rsPs4;
         wxMenuItem* MenuItemWindowEvents;
+        wxMenuItem* MenuItemG920XOne;
         wxMenuItem* MenuItemXOne;
         wxMenuItem* MenuItemXbox;
         wxMenuItem* MenuProfile1;
