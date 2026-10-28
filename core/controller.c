@@ -13,6 +13,7 @@
 #include <mainloop.h>
 #include <display.h>
 #include <stats.h>
+#include <time.h>
 #include <connectors/protocol.h>
 #include <connectors/gpp_con.h>
 #include <connectors/usb_con.h>
@@ -564,6 +565,55 @@ static int adapter_process_packet(int adapter, s_packet* packet)
     gtime now = gtime_gettime();
     ginfo("%lu.%06lu debug packet received (size = %d bytes)\n", GTIME_SECPART(now), GTIME_USECPART(now), length);
     dump(packet->value, length);
+  }
+  else if(type == BYTE_DIAGNOSTICS) {
+    if(length == 21) {
+        unsigned int reset_count =
+            (unsigned int)data[5] |
+            ((unsigned int)data[6] << 8);
+
+        unsigned int main_loop_count =
+            (unsigned int)data[8] |
+            ((unsigned int)data[9] << 8);
+
+        unsigned int usb_in_count =
+            (unsigned int)data[10] |
+            ((unsigned int)data[11] << 8);
+
+	unsigned int uart_report_count =
+	    (unsigned int)data[16] |
+	    ((unsigned int)data[17] << 8);
+
+        gwarn(
+            "SWITCH DIAG: reason=%u packet=0x%02x "
+            "expected=%u received=%u flags=0x%02x resets=%u "
+            "usb_state=%u loop=%u usb_in=%u connect=%u disconnect=%u stage=%u "
+	    "reporting=%u uart_reports=%u last_len=%u uart_errors=0x%02x uart_errors_at_reset=0x%02x\n",
+            data[0],
+            data[1],
+            data[2],
+            data[3],
+            data[4],
+            reset_count,
+            data[7],
+            main_loop_count,
+            usb_in_count,
+            data[12],
+            data[13],
+	    data[14],
+	    data[15],
+	    uart_report_count,
+	    data[18],
+	    data[19],
+	    data[20]
+        );
+    }
+    else if(length == 7) {
+        gwarn("SWITCH DIAG: old firmware response (7 bytes)\n");
+    }
+    else {
+        gwarn("SWITCH DIAG: invalid length=%u\n", length);
+    }
   }
   else
   {
@@ -1553,13 +1603,33 @@ int adapter_send()
       }
       else if(is_gimx_adapter(i))
       {
-        if (adapter->activation_button.index != 0)
-        {
-          if (adapter->axis[adapter->activation_button.index] != 0)
-          {
-            adapter->activation_button.pressed = 1;
-          }
-        }
+	// Request AVR diagnostics approximately every 5 seconds.
+	static time_t diag_last_time = 0;
+
+	time_t diag_now = time(NULL);
+
+	if (diag_last_time == 0) {
+	    diag_last_time = diag_now;
+	}
+
+	if (0 && adapter->ctype == C_TYPE_SWITCH &&
+	    diag_now - diag_last_time >= 5)
+	{
+	    diag_last_time = diag_now;
+
+	    s_packet diag = {
+	        .header = {
+	            .type = BYTE_DIAGNOSTICS,
+	            .length = 0
+	        }
+	    };
+
+	    int diag_ret = adapter_write(i, &diag, sizeof(diag.header));
+
+	    if (diag_ret < 0) {
+	        gwarn("SWITCH DIAG: request write failed\n");
+	    }
+	}
 
         unsigned int index = controller_build_report(adapter->ctype, adapter->axis, adapter->report);
 

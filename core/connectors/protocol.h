@@ -40,6 +40,7 @@ typedef struct GIMX_PACKED
 #define BYTE_DEBUG        0x99
 #define BYTE_OUT_REPORT   0xee
 #define BYTE_IN_REPORT    0xff
+#define BYTE_DIAGNOSTICS  0x78
 
 #define BYTE_STATUS_NSTARTED 0x00
 #define BYTE_STATUS_STARTED  0x01
