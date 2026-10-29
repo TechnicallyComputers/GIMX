@@ -33,8 +33,6 @@ TODO:
 Please report any bugs with identifying your devices, and send your device and device ID found with `evdev-test` or `cat /proc/bus/input/devices`
 
 Links:
-* [Documentation](https://wiki.gimx.fr)  
-* [Source code](https://gimx.fr/source)  
-* [Issue tracker](https://gimx.fr/buglist)  
+* [Linux Build Instructions](https://github.com/TechnicallyComputers/GIMX/blob/master/docs/linux-build.md)
 * Licence: [GPLv3](https://www.gnu.org/copyleft/gpl.html)  
-* [Donations](https://blog.gimx.fr/give/gimx-donations-current/)
+* [Donations](https://ko-fi.com/technicallycomputers)
