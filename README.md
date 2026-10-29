@@ -6,7 +6,7 @@ I will work on modernizing Linux build instructions and installation support ove
 
 Here is a link to the document I am maintaining, mostly copied from matlo, but his site doesn't directly apply to this build in all ways and might not always be around, so it's worth maintaining documentation here separately.
 
-[[Linux Build Instructions]
+[[Linux Build Instructions](https://github.com/TechnicallyComputers/GIMX/blob/master/docs/linux-build.md)]
 
 GIMX is a free software that allows to use a computer as a hub for your gaming devices. It works on Windows® and GNU/Linux platforms. It is compatible with Playstation® and Xbox® gaming consoles. The connection between the computer and the gaming console is performed using a USB adapter – [get one on the GIMX shop!](https://blog.gimx.fr/product/gimx-adapter/) – or a Bluetooth® dongle (PS3/PS4 only). The capabilities depend on the platform, the connection method, and the gaming platform.
 
