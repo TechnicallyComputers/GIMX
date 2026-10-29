@@ -1,39 +1,74 @@
-Install development packages
-On Ubuntu 20.04:
+## Linux Build & Installation Instructions
+
+### Install development packages
+
+#### On Ubuntu 20.04:
+
+
+```
 sudo apt-get install build-essential pkg-config git g++ libwxgtk3.0-gtk3-dev libbluetooth-dev libxml2-dev libusb-1.0-0-dev libncursesw5-dev gettext xterm xdg-utils libmhash-dev libcurl4-gnutls-dev libxi-dev libx11-dev
+```
 
-On Ubuntu 18.04 / Raspbian Stretch:
+
+#### On Ubuntu 18.04 / Raspbian Stretch:
+
+```
 sudo apt-get install build-essential pkg-config git g++ libwxgtk3.0-dev libbluetooth-dev libxml2-dev libusb-1.0-0-dev libncursesw5-dev gettext xterm xdg-utils libmhash-dev libcurl4-gnutls-dev libxi-dev libx11-dev
+```
 
-On Ubuntu 14.04:
+#### On Ubuntu 14.04:
+
+```
 sudo apt-get install git g++ libwxgtk2.8-dev libbluetooth-dev libxml2-dev libusb-1.0-0-dev libncursesw5-dev gettext xterm xdg-utils libmhash-dev libcurl4-gnutls-dev libxi-dev libx11-dev
+```
 
-On Raspbian Jessie:
+#### On Raspbian Jessie:
+
+```
 sudo apt-get install build-essential pkg-config git g++ libwxgtk2.8-dev libbluetooth-dev libxml2-dev libusb-1.0-0-dev libncursesw5-dev gettext xterm xdg-utils libmhash-dev libcurl4-gnutls-dev libxi-dev libx11-dev
+```
 
-On Fedora:
-dnf -y install wxGTK-devel bluez-libs-devel glib2-devel libxml2-devel libXi-devel libusb-devel libcurl-devel ncurses-devel mhash-devel(to be completed)
+#### On Fedora:
 
-Download GIMX sources
+```
+dnf -y install wxGTK-devel bluez-libs-devel glib2-devel libxml2-devel libXi-devel libusb-devel libcurl-devel ncurses-devel mhash-devel
+```
+(to be completed)
+
+### Download GIMX sources
+
+```
 git clone -b master --single-branch --depth 1 --recursive -j8 https://github.com/matlo/GIMX.git
+```
 
-Compile
+### Compile
+
+```
 cd GIMX
 make -j 2
+```
 
-Replace "2" with your number of CPU cores.
+Replace "2" with your number of CPU cores, for faster build times.
 
-Install
+### Install
+
+```
 sudo make install
+```
 
-Set the setuid
-A few gimx binaries need root priviledges.
+### Set the setuid
 
+A few gimx binaries need root privileges.
+
+```
 sudo chmod u+s /usr/bin/gimx /usr/bin/sixaddr /usr/bin/bdaddr /usr/bin/hcirevision
+```
 
-Set Input Device Permissions
+### Set Input Device Permissions
+
 One way to give read permissions to GIMX is to create a special group, change /dev/input/event* group ownership to that group, and then make the gimx binaries setgid to that group.
 
+```
 sudo su
 
 groupadd -f input
@@ -47,5 +82,4 @@ chgrp input /usr/bin/gimx-config /usr/bin/gimx-fpsconfig /usr/bin/gimx-launcher
 chmod g+s /usr/bin/gimx-config /usr/bin/gimx-fpsconfig /usr/bin/gimx-launcher
 
 exit
-
-
+```
