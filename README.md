@@ -20,7 +20,7 @@ If you find you're using GIMX by matlo on a certain non-ubuntu distro and it jus
 
 ### Nintendo Switch Support
 
-Based on https://github.com/hisptoot/GIMX/tree/master
+Based on https://github.com/hisptoot/GIMX/tree/master but modified and updated with improved stability.
 
 I have pulled diffs from Hisptoot to generate their firmware for the ATmega32U4 Arduino microcontroller in the GIMX cable, and after finding some issues with stability, I have adapted the behaviors after several rounds of diagnostics and testing, to produce a more stable Nintendo Switch based firmware, to allow spoofing a Nintendo Switch Pro controller.  This does not have motion control support at this time, but it works well with basic controls so far.  Part of my work with this project is to expand the support of GIMX with more stable console support for consoles I own and can test on.
 
