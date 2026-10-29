@@ -8,7 +8,9 @@ Here is a link to the document I am maintaining, mostly copied from matlo, but h
 
 [Linux Build Instructions](https://github.com/TechnicallyComputers/GIMX/blob/master/docs/linux-build.md)
 
-GIMX is a free software that allows to use a computer as a hub for your gaming devices. It works on Windows® and GNU/Linux platforms. It is compatible with Playstation® and Xbox® gaming consoles. The connection between the computer and the gaming console is performed using a USB adapter – [get one on the GIMX shop!](https://blog.gimx.fr/product/gimx-adapter/) – or a Bluetooth® dongle (PS3/PS4 only). The capabilities depend on the platform, the connection method, and the gaming platform.
+GIMX is a free software that allows to use a computer as a hub for your gaming devices. It works on Windows® and GNU/Linux platforms. It is compatible with Playstation® and Xbox® gaming consoles. The connection between the computer and the gaming console is performed using a USB adapter – or a Bluetooth® dongle (PS3/PS4 only). The capabilities depend on the platform, the connection method, and the gaming platform.
+
+NOTE:  Because the GIMX shop no longer seems to be available, I suggest looking online in places like Aliexpress for a pre-built GIMX cable with an Arduino using ATmega32U4 microcontroller compatible with GIMX.
 
 GIMX on Linux now has evdev support, which is more supported on modern Linux kernels.  
 
